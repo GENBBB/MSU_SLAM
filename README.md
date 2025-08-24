@@ -1,273 +1,201 @@
-# ORB-SLAM3
 
-### V1.0, December 22th, 2021
-**Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
+1. Требования
 
-The [Changelog](https://github.com/UZ-SLAMLab/ORB_SLAM3/blob/master/Changelog.md) describes the features of each version.
+Библиотека тестировалась в Ubuntu 24.04 (а ранее в Ubuntu 16.04 и 18.04), но должна собираться и на других платформах.
+Мощный компьютер (например, i7) обеспечит работу в реальном времени и более стабильные и точные результаты.
 
-## 🆕 Modernization Update (2025)
-This version has been **modernized and updated** to work with the latest C++ standards and dependencies:
+Компилятор C++23
 
-- **C++23 Standard**: Upgraded from C++11 to the latest C++23 standard with full compatibility
-- **OpenCV 4.6.0**: Updated to use the latest OpenCV version with modern headers and APIs
-- **Modern Dependencies**: All dependencies updated to their latest stable versions
-- **Build System Modernized**: CMake configuration updated for modern C++ standards
-- **Cross-platform Compatibility**: Tested on Ubuntu 24.04 with latest toolchain
+Эта обновлённая версия использует стандарт C++23 с современными возможностями многопоточности и библиотеки chrono.
+Требуется GCC 11+ или Clang 14+ с поддержкой C++23.
 
-All original functionality is preserved while providing better performance, modern C++ features, and compatibility with the latest development environments.
+Pangolin
 
-ORB-SLAM3 is the first real-time SLAM library able to perform **Visual, Visual-Inertial and Multi-Map SLAM** with **monocular, stereo and RGB-D** cameras, using **pin-hole and fisheye** lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate. 
+Используется Pangolin для визуализации и пользовательского интерфейса.
+Инструкции по установке: https://github.com/stevenlovegrove/Pangolin.
 
-We provide examples to run ORB-SLAM3 in the [EuRoC dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) using stereo or monocular, with or without IMU, and in the [TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) using fisheye stereo or monocular, with or without IMU. Videos of some example executions can be found at [ORB-SLAM3 channel](https://www.youtube.com/channel/UCXVt-kXG6T95Z4tVaYlU80Q).
+OpenCV
 
-This software is based on [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2) developed by [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2)).
+Используется OpenCV для обработки изображений и признаков.
+Инструкции по установке: http://opencv.org.
+Требуется OpenCV версии 4.6.0 или новее. Эта версия использует современные заголовки и API OpenCV.
 
-<a href="https://youtu.be/HyLNq-98LRo" target="_blank"><img src="https://img.youtube.com/vi/HyLNq-98LRo/0.jpg" 
-alt="ORB-SLAM3" width="240" height="180" border="10" /></a>
+Eigen3
 
-### Related Publications:
+Требуется для работы g2o (см. ниже).
+Инструкции по установке: http://eigen.tuxfamily.org.
+Необходима версия минимум 3.1.0. Тестировалось с Eigen3 3.4.0.
 
-[ORB-SLAM3] Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M. M. Montiel and Juan D. Tardós, **ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial and Multi-Map SLAM**, *IEEE Transactions on Robotics 37(6):1874-1890, Dec. 2021*. **[PDF](https://arxiv.org/abs/2007.11898)**.
+DBoW2 и g2o (включены в папку Thirdparty)
 
-[IMU-Initialization] Carlos Campos, J. M. M. Montiel and Juan D. Tardós, **Inertial-Only Optimization for Visual-Inertial Initialization**, *ICRA 2020*. **[PDF](https://arxiv.org/pdf/2003.05766.pdf)**
+Используются модифицированные версии библиотек DBoW2 для распознавания местоположений и g2o для выполнения нелинейной оптимизации.
+Обе библиотеки (BSD) включены в папку Thirdparty.
 
-[ORBSLAM-Atlas] Richard Elvira, J. M. M. Montiel and Juan D. Tardós, **ORBSLAM-Atlas: a robust and accurate multi-map system**, *IROS 2019*. **[PDF](https://arxiv.org/pdf/1908.11585.pdf)**.
+Python
 
-[ORBSLAM-VI] Raúl Mur-Artal, and Juan D. Tardós, **Visual-inertial monocular SLAM with map reuse**, IEEE Robotics and Automation Letters, vol. 2 no. 2, pp. 796-803, 2017. **[PDF](https://arxiv.org/pdf/1610.05949.pdf)**. 
+Требуется для вычисления выравнивания траектории с эталоном.
+Необходим модуль Numpy.
+	•	(win) http://www.python.org/downloads/windows
+	•	(deb) sudo apt install libpython2.7-dev
+	•	(mac) предустановлен в OSX
 
-[Stereo and RGB-D] Raúl Mur-Artal and Juan D. Tardós. **ORB-SLAM2: an Open-Source SLAM System for Monocular, Stereo and RGB-D Cameras**. *IEEE Transactions on Robotics,* vol. 33, no. 5, pp. 1255-1262, 2017. **[PDF](https://arxiv.org/pdf/1610.06475.pdf)**.
+ROS (опционально)
 
-[Monocular] Raúl Mur-Artal, José M. M. Montiel and Juan D. Tardós. **ORB-SLAM: A Versatile and Accurate Monocular SLAM System**. *IEEE Transactions on Robotics,* vol. 31, no. 5, pp. 1147-1163, 2015. (**2015 IEEE Transactions on Robotics Best Paper Award**). **[PDF](https://arxiv.org/pdf/1502.00956.pdf)**.
+Есть примеры обработки входных данных от моно, моно+IMU, стерео, стерео+IMU или RGB-D камеры с использованием ROS. Сборка этих примеров опциональна.
+Тестировалось с ROS Melodic под Ubuntu 18.04.
 
-[DBoW2 Place Recognition] Dorian Gálvez-López and Juan D. Tardós. **Bags of Binary Words for Fast Place Recognition in Image Sequences**. *IEEE Transactions on Robotics,* vol. 28, no. 5, pp. 1188-1197, 2012. **[PDF](http://doriangalvez.com/php/dl.php?dlp=GalvezTRO12.pdf)**
+⸻
 
-# 1. License
+2. Сборка библиотеки ORB-SLAM3 и примеров
 
-ORB-SLAM3 is released under [GPLv3 license](https://github.com/UZ-SLAMLab/ORB_SLAM3/LICENSE). For a list of all code/library dependencies (and associated licenses), please see [Dependencies.md](https://github.com/UZ-SLAMLab/ORB_SLAM3/blob/master/Dependencies.md).
+Клонируйте репозиторий:
 
-For a closed-source version of ORB-SLAM3 for commercial purposes, please contact the authors: orbslam (at) unizar (dot) es.
-
-If you use ORB-SLAM3 in an academic work, please cite:
-  
-    @article{ORBSLAM3_TRO,
-      title={{ORB-SLAM3}: An Accurate Open-Source Library for Visual, Visual-Inertial 
-               and Multi-Map {SLAM}},
-      author={Campos, Carlos AND Elvira, Richard AND G\´omez, Juan J. AND Montiel, 
-              Jos\'e M. M. AND Tard\'os, Juan D.},
-      journal={IEEE Transactions on Robotics}, 
-      volume={37},
-      number={6},
-      pages={1874-1890},
-      year={2021}
-     }
-
-# 2. Prerequisites
-We have tested the library in **Ubuntu 24.04** (and previously on Ubuntu 16.04 and 18.04), but it should be easy to compile on other platforms. A powerful computer (e.g. i7) will ensure real-time performance and provide more stable and accurate results.
-
-## C++23 Compiler
-This modernized version uses **C++23 standard** with modern threading and chrono functionalities. Requires GCC 11+ or Clang 14+ with C++23 support.
-
-## Pangolin
-We use [Pangolin](https://github.com/stevenlovegrove/Pangolin) for visualization and user interface. Download and install instructions can be found at: https://github.com/stevenlovegrove/Pangolin.
-
-## OpenCV
-We use [OpenCV](http://opencv.org) to manipulate images and features. Download and install instructions can be found at: http://opencv.org. **Required OpenCV 4.6.0 or later**. This version uses modern OpenCV headers and APIs.
-
-## Eigen3
-Required by g2o (see below). Download and install instructions can be found at: http://eigen.tuxfamily.org. **Required at least 3.1.0**. Tested with Eigen3 3.4.0.
-
-## DBoW2 and g2o (Included in Thirdparty folder)
-We use modified versions of the [DBoW2](https://github.com/dorian3d/DBoW2) library to perform place recognition and [g2o](https://github.com/RainerKuemmerle/g2o) library to perform non-linear optimizations. Both modified libraries (which are BSD) are included in the *Thirdparty* folder.
-
-## Python
-Required to calculate the alignment of the trajectory with the ground truth. **Required Numpy module**.
-
-* (win) http://www.python.org/downloads/windows
-* (deb) `sudo apt install libpython2.7-dev`
-* (mac) preinstalled with osx
-
-## ROS (optional)
-
-We provide some examples to process input of a monocular, monocular-inertial, stereo, stereo-inertial or RGB-D camera using ROS. Building these examples is optional. These have been tested with ROS Melodic under Ubuntu 18.04.
-
-# 3. Building ORB-SLAM3 library and examples
-
-Clone the repository:
-```
 git clone https://github.com/UZ-SLAMLab/ORB_SLAM3.git ORB_SLAM3
-```
 
-**Prerequisites for modern build:**
-- CMake 3.16 or later
-- GCC 11+ or Clang 14+ with C++23 support
-- OpenCV 4.6.0+ development packages
-- Eigen3 3.4.0+ development packages
-- Boost serialization libraries
+Необходимые условия для современной сборки:
+	•	CMake 3.16 или новее
+	•	GCC 11+ или Clang 14+ с поддержкой C++23
+	•	Пакеты разработки OpenCV 4.6.0+
+	•	Пакеты разработки Eigen3 3.4.0+
+	•	Библиотеки Boost (serialization)
 
-We provide a script `build.sh` to build the *Thirdparty* libraries and *ORB-SLAM3*. Please make sure you have installed all required dependencies (see section 2). Execute:
-```
+Мы предоставляем скрипт build.sh для сборки библиотек Thirdparty и ORB-SLAM3.
+Убедитесь, что все необходимые зависимости установлены (см. раздел 2). Выполните:
+
 cd ORB_SLAM3
 chmod +x build.sh
 ./build.sh
-```
 
-This will create **libORB_SLAM3.so** at *lib* folder and the executables in *Examples* folder. The build system has been modernized to use C++23 standard and latest OpenCV APIs.
+В результате будет создана библиотека libORB_SLAM3.so в папке lib и исполняемые файлы в папке Examples.
+Система сборки была модернизирована для использования стандарта C++23 и последних API OpenCV.
 
-# 4. Running ORB-SLAM3 with your camera
+⸻
 
-Directory `Examples` contains several demo programs and calibration files to run ORB-SLAM3 in all sensor configurations with Intel Realsense cameras T265 and D435i. The steps needed to use your own camera are: 
+4. Запуск ORB-SLAM3 с вашей камерой
 
-1. Calibrate your camera following `Calibration_Tutorial.pdf` and write your calibration file `your_camera.yaml`
+Каталог Examples содержит несколько демонстрационных программ и файлов калибровки для запуска ORB-SLAM3 во всех конфигурациях сенсоров с камерами Intel Realsense T265 и D435i.
 
-2. Modify one of the provided demos to suit your specific camera model, and build it
+Шаги для использования вашей собственной камеры:
+	1.	Откалибруйте камеру, следуя инструкции в Calibration_Tutorial.pdf, и создайте файл калибровки your_camera.yaml.
+	2.	Измените один из предоставленных примеров под вашу модель камеры и соберите его.
+	3.	Подключите камеру к компьютеру через USB3 или соответствующий интерфейс.
+	4.	Запустите ORB-SLAM3. Например, для камеры D435i команда будет:
 
-3. Connect the camera to your computer using USB3 or the appropriate interface
-
-4. Run ORB-SLAM3. For example, for our D435i camera, we would execute:
-
-```
 ./Examples/Stereo-Inertial/stereo_inertial_realsense_D435i Vocabulary/ORBvoc.txt ./Examples/Stereo-Inertial/RealSense_D435i.yaml
-```
 
-# 5. EuRoC Examples
-[EuRoC dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) was recorded with two pinhole cameras and an inertial sensor. We provide an example script to launch EuRoC sequences in all the sensor configurations.
 
-1. Download a sequence (ASL format) from http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets
 
-2. Open the script "euroc_examples.sh" in the root of the project. Change **pathDatasetEuroc** variable to point to the directory where the dataset has been uncompressed. 
+⸻
 
-3. Execute the following script to process all the sequences with all sensor configurations:
-```
+5. Примеры с EuRoC
+
+EuRoC dataset был записан с двумя pinhole-камерами и инерциальным датчиком. Мы предоставляем скрипт для запуска последовательностей EuRoC во всех конфигурациях сенсоров.
+	1.	Скачайте последовательность (ASL формат) с сайта EuRoC.
+	2.	Откройте скрипт euroc_examples.sh в корневой папке проекта. Измените переменную pathDatasetEuroc, указав путь к распакованному датасету.
+	3.	Выполните скрипт для обработки всех последовательностей:
+
 ./euroc_examples
-```
 
-## Evaluation
-EuRoC provides ground truth for each sequence in the IMU body reference. As pure visual executions report trajectories centered in the left camera, we provide in the "evaluation" folder the transformation of the ground truth to the left camera reference. Visual-inertial trajectories use the ground truth from the dataset.
 
-Execute the following script to process sequences and compute the RMS ATE:
-```
+
+Оценка
+
+Для EuRoC предоставляется эталонная траектория (ground truth). Для чисто визуальных запусков траектория центрируется в левой камере, поэтому мы предоставляем трансформацию эталона в систему координат левой камеры. Визуально-инерциальные траектории используют эталон напрямую.
+
+Для расчёта RMS ATE:
+
 ./euroc_eval_examples
-```
 
-# 6. TUM-VI Examples
-[TUM-VI dataset](https://vision.in.tum.de/data/datasets/visual-inertial-dataset) was recorded with two fisheye cameras and an inertial sensor.
 
-1. Download a sequence from https://vision.in.tum.de/data/datasets/visual-inertial-dataset and uncompress it.
+⸻
 
-2. Open the script "tum_vi_examples.sh" in the root of the project. Change **pathDatasetTUM_VI** variable to point to the directory where the dataset has been uncompressed. 
+6. Примеры с TUM-VI
 
-3. Execute the following script to process all the sequences with all sensor configurations:
-```
+TUM-VI dataset записан с двумя fisheye-камерами и инерциальным датчиком.
+	1.	Скачайте и распакуйте последовательность TUM-VI.
+	2.	Откройте скрипт tum_vi_examples.sh в корневой папке проекта. Измените переменную pathDatasetTUM_VI, указав путь к распакованному датасету.
+	3.	Выполните скрипт для обработки всех последовательностей:
+
 ./tum_vi_examples
-```
 
-## Evaluation
-In TUM-VI ground truth is only available in the room where all sequences start and end. As a result the error measures the drift at the end of the sequence. 
 
-Execute the following script to process sequences and compute the RMS ATE:
-```
+
+Оценка
+
+Эталонная траектория для TUM-VI доступна только в комнате, где начинаются и заканчиваются все последовательности. Поэтому ошибка измеряется по дрейфу в конце траектории.
+
+Для расчёта RMS ATE:
+
 ./tum_vi_eval_examples
-```
 
-# 7. ROS Examples
 
-### Building the nodes for mono, mono-inertial, stereo, stereo-inertial and RGB-D
-Tested with ROS Melodic and ubuntu 18.04.
+⸻
 
-1. Add the path including *Examples/ROS/ORB_SLAM3* to the ROS_PACKAGE_PATH environment variable. Open .bashrc file:
-  ```
-  gedit ~/.bashrc
-  ```
-and add at the end the following line. Replace PATH by the folder where you cloned ORB_SLAM3:
+7. Примеры с ROS
 
-  ```
-  export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:PATH/ORB_SLAM3/Examples/ROS
-  ```
-  
-2. Execute `build_ros.sh` script:
+Сборка узлов для: mono, mono-inertial, stereo, stereo-inertial и RGB-D
 
-  ```
-  chmod +x build_ros.sh
-  ./build_ros.sh
-  ```
-  
-### Running Monocular Node
-For a monocular input from topic `/camera/image_raw` run node ORB_SLAM3/Mono. You will need to provide the vocabulary file and a settings file. See the monocular examples above.
+Тестировалось с ROS Melodic под Ubuntu 18.04.
+	1.	Добавьте путь к Examples/ROS/ORB_SLAM3 в переменную окружения ROS_PACKAGE_PATH. Для этого откройте .bashrc:
 
-  ```
-  rosrun ORB_SLAM3 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
-  ```
+gedit ~/.bashrc
 
-### Running Monocular-Inertial Node
-For a monocular input from topic `/camera/image_raw` and an inertial input from topic `/imu`, run node ORB_SLAM3/Mono_Inertial. Setting the optional third argument to true will apply CLAHE equalization to images (Mainly for TUM-VI dataset).
+В конец файла добавьте строку (замените PATH на путь к ORB_SLAM3):
 
-  ```
-  rosrun ORB_SLAM3 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE [EQUALIZATION]	
-  ```
+export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:PATH/ORB_SLAM3/Examples/ROS
 
-### Running Stereo Node
-For a stereo input from topic `/camera/left/image_raw` and `/camera/right/image_raw` run node ORB_SLAM3/Stereo. You will need to provide the vocabulary file and a settings file. For Pinhole camera model, if you **provide rectification matrices** (see Examples/Stereo/EuRoC.yaml example), the node will recitify the images online, **otherwise images must be pre-rectified**. For FishEye camera model, rectification is not required since system works with original images:
 
-  ```
-  rosrun ORB_SLAM3 Stereo PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION
-  ```
+	2.	Выполните скрипт сборки:
 
-### Running Stereo-Inertial Node
-For a stereo input from topics `/camera/left/image_raw` and `/camera/right/image_raw`, and an inertial input from topic `/imu`, run node ORB_SLAM3/Stereo_Inertial. You will need to provide the vocabulary file and a settings file, including rectification matrices if required in a similar way to Stereo case:
+chmod +x build_ros.sh
+./build_ros.sh
 
-  ```
-  rosrun ORB_SLAM3 Stereo_Inertial PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION [EQUALIZATION]	
-  ```
-  
-### Running RGB_D Node
-For an RGB-D input from topics `/camera/rgb/image_raw` and `/camera/depth_registered/image_raw`, run node ORB_SLAM3/RGBD. You will need to provide the vocabulary file and a settings file. See the RGB-D example above.
 
-  ```
-  rosrun ORB_SLAM3 RGBD PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
-  ```
 
-**Running ROS example:** Download a rosbag (e.g. V1_02_medium.bag) from the EuRoC dataset (http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). Open 3 tabs on the terminal and run the following command at each tab for a Stereo-Inertial configuration:
-  ```
-  roscore
-  ```
-  
-  ```
-  rosrun ORB_SLAM3 Stereo_Inertial Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/EuRoC.yaml true
-  ```
-  
-  ```
-  rosbag play --pause V1_02_medium.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw /imu0:=/imu
-  ```
-  
-Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
+⸻
 
-**Remark:** For rosbags from TUM-VI dataset, some play issue may appear due to chunk size. One possible solution is to rebag them with the default chunk size, for example:
-  ```
-  rosrun rosbag fastrebag.py dataset-room1_512_16.bag dataset-room1_512_16_small_chunks.bag
-  ```
+Запуск узлов
 
-# 8. Running time analysis
-A flag in `include\Config.h` activates time measurements. It is necessary to uncomment the line `#define REGISTER_TIMES` to obtain the time stats of one execution which is shown at the terminal and stored in a text file(`ExecTimeMean.txt`).
+Моно-камера:
 
-# 9. Calibration
-You can find a tutorial for visual-inertial calibration and a detailed description of the contents of valid configuration files at  `Calibration_Tutorial.pdf`
+rosrun ORB_SLAM3 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
 
-# 10. Modernization Notes (2025)
+Моно + IMU:
 
-This version has been comprehensively modernized from the original C++11/OpenCV 3.x codebase to support the latest standards and libraries:
+rosrun ORB_SLAM3 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE [EQUALIZATION]	
 
-## Key Changes Made:
-- **C++ Standard**: Upgraded from C++11 to C++23 across all CMakeLists.txt files
-- **OpenCV Headers**: Replaced all legacy headers (`opencv2/core/core.hpp`, etc.) with modern `opencv2/opencv.hpp`
-- **Build System**: Updated CMake minimum version requirements and compiler flags
-- **Dependencies**: All third-party libraries (DBoW2, g2o, Sophus) updated for C++23 compatibility
-- **Code Compatibility**: Fixed namespace issues, mutex declarations, and C++17/C++23 compliance
+Стерео:
 
-## Tested Environment:
-- **OS**: Ubuntu 24.04 LTS
-- **Compiler**: GCC 11+ with C++23 support
-- **OpenCV**: 4.6.0
-- **Eigen3**: 3.4.0
-- **CMake**: 3.16+
+rosrun ORB_SLAM3 Stereo PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION
 
-All original functionality is preserved while providing access to modern C++23 features and improved performance with the latest OpenCV optimizations.
+Стерео + IMU:
+
+rosrun ORB_SLAM3 Stereo_Inertial PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION [EQUALIZATION]	
+
+RGB-D:
+
+rosrun ORB_SLAM3 RGBD PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
+
+
+⸻
+
+Пример запуска с ROS и EuRoC
+
+Скачайте rosbag (например, V1_02_medium.bag) из EuRoC. Откройте три вкладки терминала:
+	1.	
+
+roscore
+
+	2.	
+
+rosrun ORB_SLAM3 Stereo_Inertial Vocabulary/ORBvoc.txt Examples/Stereo-Inertial/EuRoC.yaml true
+
+	3.	
+
+rosbag play --pause V1_02_medium.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw /imu0:=/imu
+
+После загрузки словаря ORB-SLAM3 нажмите пробел в терминале rosbag, чтобы начать воспроизведение.
+
+Примечание: для датасета TUM-VI иногда возникают проблемы из-за размера чанков. Решение — пересобрать bag с дефолтным размером чанка, например:
+
+rosrun rosbag fastrebag.py dataset-room1_512_16.bag dataset-room1_512_16_small_chunks.bag
