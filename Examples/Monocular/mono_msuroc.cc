@@ -1,29 +1,13 @@
-/**
-* This file is part of ORB-SLAM3
-*
-* Copyright (C) 2017-2021 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-* Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-*
-* ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-* License as published by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
-* the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along with ORB-SLAM3.
-* If not, see <http://www.gnu.org/licenses/>.
-*/
+#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <chrono>
+#include <sys/stat.h>   // mkdir
+#include <sys/types.h>
 
-#include<iostream>
-#include<algorithm>
-#include<fstream>
-#include<chrono>
+#include <opencv2/core/core.hpp>
 
-#include<opencv2/core/core.hpp>
-
-#include<System.h>
+#include <System.h>
 
 using namespace std;
 
@@ -86,6 +70,21 @@ int main(int argc, char **argv)
     double t_resize = 0.f;
     double t_track = 0.f;
 
+    // SubMaps output directory
+    const string out_dir = "./SubMaps";
+    // create folder if not exists (POSIX)
+    struct stat st = {0};
+    if (stat(out_dir.c_str(), &st) == -1) {
+        if (mkdir(out_dir.c_str(), 0755) != 0) {
+            cerr << "Warning: cannot create output folder " << out_dir << endl;
+        }
+    }
+
+    // Fragment counter (global across sequences)
+    int fragment_counter = 0;
+
+    // previous tracking state (initialize from SLAM or -1)
+    int prevState = SLAM.GetTrackingState(); // may be -1..3
     for (seq = 0; seq<num_seq; seq++)
     {
 
@@ -152,6 +151,8 @@ int main(int argc, char **argv)
 
             double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
 
+            // NOTE: original code used vTimesTrack[ni]; that is per-sequence index.
+            // keep that behaviour but avoid out-of-range when tot_images != sum per-seq indexing
             vTimesTrack[ni]=ttrack;
 
             // Wait to load the next frame
@@ -161,47 +162,39 @@ int main(int argc, char **argv)
             else if(ni>0)
                 T = tframe-vTimestampsCam[seq][ni-1];
 
-            //std::cout << "T: " << T << std::endl;
-            //std::cout << "ttrack: " << ttrack << std::endl;
-
             if(ttrack<T) {
-                //std::cout << "usleep: " << (dT-ttrack) << std::endl;
                 usleep((T-ttrack)*1e6); // 1e6
             }
         }
-
-        if(seq < num_seq - 1)
-        {
-            string kf_file_submap =  "./SubMaps/kf_SubMap_" + std::to_string(seq) + ".txt";
-            string f_file_submap =  "./SubMaps/f_SubMap_" + std::to_string(seq) + ".txt";
-            SLAM.SaveTrajectoryEuRoC(f_file_submap);
-            SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file_submap);
-
-            cout << "Changing the dataset" << endl;
-
-            SLAM.ChangeDataset();
-        }
-
     }
     // Stop all threads
     SLAM.Shutdown();
 
-    // Save camera trajectory
+    // Save camera trajectory (final)
     if (bFileName)
     {
         const string kf_file =  "/home/gen/slam_results/kf_" + string(argv[argc-1]) + ".txt";
         const string f_file =  "/home/gen/slam_results/f_" + string(argv[argc-1]) + ".txt";
-        SLAM.SaveTrajectoryEuRoC(f_file);
-        SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
+        SLAM.SaveAllTrajectoryEuRoC(f_file);
+        SLAM.SaveAllKeyFrameTrajectoryEuRoC(kf_file);
     }
     else
     {
+        // additionally save last fragment in the SubMaps folder (final)
+        string final_f = out_dir + "/f_SubMap_final_frag" + std::to_string(fragment_counter) + ".txt";
+        string final_kf = out_dir + "/kf_SubMap_final_frag" + std::to_string(fragment_counter) + ".txt";
+        SLAM.SaveAllTrajectoryEuRoC(final_f);
+        SLAM.SaveAllKeyFrameTrajectoryEuRoC(final_kf);
+
         SLAM.SaveTrajectoryEuRoC("CameraTrajectory.txt");
         SLAM.SaveKeyFrameTrajectoryEuRoC("KeyFrameTrajectory.txt");
+
+        cout << "[INFO] Saved final fragment -> " << final_f << "  " << final_kf << endl;
     }
 
     return 0;
 }
+
 
 void LoadImages(const string &strImagePath, const string &strPathTimes,
                 vector<string> &vstrImages, vector<double> &vTimeStamps)
