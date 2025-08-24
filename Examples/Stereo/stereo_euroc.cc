@@ -28,7 +28,8 @@
 
 using namespace std;
 
-void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
+void LoadImages(const string &strPathLeft, const string &strPathRight,
+                const string &strPathTimesLeft, const string &strPathTimesRight,
                 vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps);
 
 int main(int argc, char **argv)
@@ -40,9 +41,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    const int num_seq = (argc-3)/2;
+    const int num_seq = (argc-3)/3;
     cout << "num_seq = " << num_seq << endl;
-    bool bFileName= (((argc-3) % 2) == 1);
+    bool bFileName= (((argc-3) % 3) == 1);
     string file_name;
     if (bFileName)
     {
@@ -68,12 +69,14 @@ int main(int argc, char **argv)
         cout << "Loading images for sequence " << seq << "...";
 
         string pathSeq(argv[(2*seq) + 3]);
-        string pathTimeStamps(argv[(2*seq) + 4]);
+        string pathTimeStampsLeft(argv[(2*seq) + 4]);
+        string pathTimeStampsRight(argv[(2*seq) + 5]);
 
         string pathCam0 = pathSeq + "/mav0/cam0/data";
         string pathCam1 = pathSeq + "/mav0/cam1/data";
 
-        LoadImages(pathCam0, pathCam1, pathTimeStamps, vstrImageLeft[seq], vstrImageRight[seq], vTimestampsCam[seq]);
+        LoadImages(pathCam0, pathCam1, pathTimeStampsLeft, pathTimeStampsRight,
+                   vstrImageLeft[seq], vstrImageRight[seq], vTimestampsCam[seq]);
         cout << "LOADED!" << endl;
 
         nImages[seq] = vstrImageLeft[seq].size();
@@ -122,7 +125,7 @@ int main(int argc, char **argv)
 
             double tframe = vTimestampsCam[seq][ni];
 
-    #ifdef COMPILEDWITHC11
+    #ifdef COMPILEDWITHC23
             std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     #else
             std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
@@ -131,7 +134,7 @@ int main(int argc, char **argv)
             // Pass the images to the SLAM system
             SLAM.TrackStereo(imLeft,imRight,tframe, vector<ORB_SLAM3::IMU::Point>(), vstrImageLeft[seq][ni]);
 
-    #ifdef COMPILEDWITHC11
+    #ifdef COMPILEDWITHC23
             std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
     #else
             std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();
@@ -185,28 +188,37 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
+void LoadImages(const string &strPathLeft, const string &strPathRight,
+                const string &strPathTimesLeft, const string &strPathTimesRight,
                 vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps)
 {
-    ifstream fTimes;
-    fTimes.open(strPathTimes.c_str());
+    ifstream fTimesLeft;
+    fTimesLeft.open(strPathTimesLeft.c_str());
+    ifstream fTimesRight;
+    fTimesRight.open(strPathTimesRight.c_str());
     vTimeStamps.reserve(5000);
     vstrImageLeft.reserve(5000);
     vstrImageRight.reserve(5000);
-    while(!fTimes.eof())
+    while(!fTimesLeft.eof())
     {
-        string s;
-        getline(fTimes,s);
-        if(!s.empty())
+        string sLeft, sRight;
+        getline(fTimesLeft,sLeft);
+        getline(fTimesRight,sRight);
+        if(!sLeft.empty())
         {
             stringstream ss;
-            ss << s;
-            vstrImageLeft.push_back(strPathLeft + "/" + ss.str() + ".png");
-            vstrImageRight.push_back(strPathRight + "/" + ss.str() + ".png");
+            ss << sLeft;
+            stringstream ss2;
+            ss2 << sRight;
+            if (ss2.str() == "") {
+              cout << vTimeStamps.size() << endl;
+              break;
+            }
+            vstrImageLeft.push_back(strPathLeft + "/" + ss.str() + ".jpg");
+            vstrImageRight.push_back(strPathRight + "/" + ss2.str() + ".jpg");
             double t;
             ss >> t;
             vTimeStamps.push_back(t/1e9);
-
         }
     }
 }
